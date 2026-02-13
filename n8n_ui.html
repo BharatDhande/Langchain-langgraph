@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Expense Tracker AI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: "Inter", system-ui, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      background: #0f172a;
+      color: #e5e7eb;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .chat-container {
+      width: 420px;
+      max-width: 95%;
+      height: 600px;
+      background: #020617;
+      border-radius: 14px;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.6);
+    }
+
+    .header {
+      padding: 16px;
+      font-size: 18px;
+      font-weight: 600;
+      background: #020617;
+      border-bottom: 1px solid #1e293b;
+      text-align: center;
+    }
+
+    .messages {
+      flex: 1;
+      padding: 16px;
+      overflow-y: auto;
+    }
+
+    .msg {
+      margin-bottom: 14px;
+      max-width: 85%;
+      line-height: 1.4;
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 14px;
+      white-space: pre-wrap;
+    }
+
+    .user {
+      background: #2563eb;
+      margin-left: auto;
+      border-bottom-right-radius: 2px;
+    }
+
+    .bot {
+      background: #1e293b;
+      border-bottom-left-radius: 2px;
+    }
+
+    .input-area {
+      display: flex;
+      padding: 12px;
+      gap: 10px;
+      border-top: 1px solid #1e293b;
+    }
+
+    input {
+      flex: 1;
+      background: #020617;
+      border: 1px solid #334155;
+      color: white;
+      padding: 10px 12px;
+      border-radius: 8px;
+      outline: none;
+    }
+
+    button {
+      background: #22c55e;
+      border: none;
+      color: #022c22;
+      font-weight: 600;
+      padding: 0 18px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .typing {
+      opacity: 0.6;
+      font-size: 13px;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="chat-container">
+  <div class="header">💸 Expense Tracker AI</div>
+
+  <div class="messages" id="messages">
+    <div class="msg bot">
+      Hi 👋  
+      Tell me what you spent today.
+    </div>
+  </div>
+
+  <div class="input-area">
+    <input id="input" placeholder="e.g. I spent 200 on pizza" />
+    <button id="sendBtn">Send</button>
+  </div>
+</div>
+
+<script>
+  const WEBHOOK_URL =
+    "http://13.127.173.23:5678/webhook/26c8652e-524a-43d8-8728-e3dabc1fe130";
+
+  const messages = document.getElementById("messages");
+  const input = document.getElementById("input");
+  const sendBtn = document.getElementById("sendBtn");
+
+  function addMessage(text, type) {
+    const div = document.createElement("div");
+    div.className = `msg ${type}`;
+    div.textContent = text;
+    messages.appendChild(div);
+    messages.scrollTop = messages.scrollHeight;
+  }
+
+  async function sendMessage() {
+    const text = input.value.trim();
+    if (!text) return;
+
+    addMessage(text, "user");
+    input.value = "";
+    sendBtn.disabled = true;
+
+    const typing = document.createElement("div");
+    typing.className = "typing";
+    typing.textContent = "AI is thinking…";
+    messages.appendChild(typing);
+    messages.scrollTop = messages.scrollHeight;
+
+    try {
+      const res = await fetch(WEBHOOK_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ msg: text })
+      });
+
+      const reply = await res.text();
+
+      typing.remove();
+      addMessage(reply, "bot");
+
+    } catch (err) {
+      typing.remove();
+      addMessage("⚠️ Error connecting to server", "bot");
+    }
+
+    sendBtn.disabled = false;
+    input.focus();
+  }
+
+  sendBtn.onclick = sendMessage;
+  input.addEventListener("keydown", e => {
+    if (e.key === "Enter") sendMessage();
+  });
+</script>
+
+</body>
+</html>
