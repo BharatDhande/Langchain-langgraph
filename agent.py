@@ -11,7 +11,7 @@ llm = OpenAI(
 )
 
 server_params = StdioServerParameters(
-    command="python",           # or full path to venv python
+    command="python",        
     args=["main.py"]
 )
 
